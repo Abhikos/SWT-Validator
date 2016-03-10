@@ -6,27 +6,30 @@
 *
 *
 ********************************************************/
+package com.teamcenter.hendrickson.schmgr.operations;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.eclipse.jface.fieldassist.ControlDecoration;
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry;
-import org.eclipse.jface.resource.ResourceManager;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.wb.swt.ResourceManager;
 
 
 public class Validator {
 	
-	private String errorMessage;
+	private static boolean noErrorMessage=false;
 	private String warningMessage;
-	private int DECORATOR_POSITION;
-	private int DECORATOR_MARGIN_WIDTH;
-	private int DEFAULT_WIDTH_HINT;
     private String patternValue;
     private Text text;
     private Combo combo;
@@ -34,15 +37,18 @@ public class Validator {
     private int position;
     private String description;
     private Button button;
-    private static int count=1;
-	
+
     
-    Validator(){
-		
-		this.errorMessage="error";
+   
+    
+    public Validator(){
+    	
+    	
+    	
 	}
     
-	Validator(Text text,String patternValue,int position,String desc){
+	public Validator(Text text,String patternValue,int position,String desc){
+	
 		this.patternValue=patternValue;
 		this.text=text;
 		this.controlObj = new ControlDecoration(text, position);
@@ -53,65 +59,81 @@ public class Validator {
 		
 	}
 	
-	Validator(Combo combo,String patternValue,int position,String desc){
+	public Validator(Combo combo,String patternValue,int position,String desc){
+		
 		this.patternValue=patternValue;
 		this.combo = combo;
 		this.controlObj = new ControlDecoration(combo, position);
 		this.position=position;
 		this.setDescription(desc);
 		this.setControlDecorationForCombo(controlObj, combo, "required", desc, position);
+		if(this.combo.getText() != null && !this.combo.getText().isEmpty())
+			this.setControlDecorationForCombo(controlObj, combo, "required", desc, position);
+			else
+			this.setControlDecorationForCombo(controlObj, combo, "required", desc, position);
+		
 	}
 	
 	
 	
-	boolean isValidPattern(){
+	public boolean isValidPattern(String success_des, String error_desc){
 		
+		if(this.text.getText() != null && !this.text.getText().isEmpty()){
 		Pattern pattern = Pattern.compile(this.patternValue);
 		Matcher matcher = pattern.matcher(this.text.getText());
 		if(matcher.matches()){
 			
-			this.setControlDecorationForTextBox(controlObj, text, "correct", "Correct", position);
-			setErrorMessage("no");
-			this.count+=1;
+			this.setControlDecorationForTextBox(controlObj, text, "correct", success_des, position);
+		
+		
+		
 		}else{
-			this.setControlDecorationForTextBox(controlObj, text, "error", "Invalid", position);
-			setErrorMessage("error");
+			this.setControlDecorationForTextBox(controlObj, text, "error", error_desc, position);
 			
+		
+	
 		}
 		
 		
 		return matcher.matches();
 		
-	
-	}
-	
-	void isbuttonEnable(Button btn,int elementCount){
-		System.out.println("count"+count);
-		if(count>=elementCount){
-			btn.setEnabled(true);
 		}else{
-			btn.setEnabled(false);
+			this.setControlDecorationForTextBox(controlObj, text, "error", error_desc, position);
+			
+			return false;
 		}
-		
 	}
+
 	
 	
-	boolean isValidPatternCombo(){
-		
+	public boolean isValidPatternCombo(String success_des, String error_desc){
+		if(this.combo.getText() != null && !this.combo.getText().isEmpty()){
 		Pattern pattern = Pattern.compile(this.patternValue);
 		Matcher matcher = pattern.matcher(this.combo.getText());
 		if(matcher.matches()){
 			
-		    this.setControlDecorationForCombo(controlObj, combo, "correct", "correct", DECORATOR_POSITION);
-		    setErrorMessage("no");
-		    this.count+=1;
+		    this.setControlDecorationForCombo(controlObj, combo, "correct", success_des, position);
+		
+		   
+		
 		}else{
-			this.setControlDecorationForCombo(controlObj, combo, "error", "invalid", DECORATOR_POSITION);
-			setErrorMessage("error");
+			
+			this.setControlDecorationForCombo(controlObj, combo, "error", error_desc, position);
+			
+			
+		
 	
 		}
 		
-		return false;
+		return matcher.matches();
+		}else{
+			
+			this.setControlDecorationForCombo(controlObj, combo, "required", getDescription(), position);
+		
+			return false;
+			
+		}
+		
 	}
 	
 	
@@ -173,18 +195,26 @@ public class Validator {
 				.getFieldDecoration(Icontype)
 				.getImage();
 		
+		if(type.equals("correct"))
+			return image = ResourceManager.getPluginImage("example", "icons/tick.png");
+		else
 		return image;
 	}
 
-	
-	
-	public String getErrorMessage() {
-		return errorMessage;
+	public void getErrorMessageBox(String errormsg){
+		MessageBox m = new MessageBox(Display.getDefault().getActiveShell(),SWT.ICON_WARNING);
+		m.setMessage(errormsg);
+		m.open();
 	}
 	
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
+	public boolean isValidMap(HashMap<Object,Boolean> validCheck){
+		
+		if(validCheck.containsValue(false))
+			return false;
+		else
+			return true;
 	}
+	
 	
 	public String getWarningMessage() {
 		return warningMessage;
@@ -194,29 +224,6 @@ public class Validator {
 		this.warningMessage = warningMessage;
 	}
 	
-	public int getDECORATOR_POSITION() {
-		return DECORATOR_POSITION;
-	}
-
-	public void setDECORATOR_POSITION(int dECORATOR_POSITION) {
-		DECORATOR_POSITION = dECORATOR_POSITION;
-	}
-
-	public int getDECORATOR_MARGIN_WIDTH() {
-		return DECORATOR_MARGIN_WIDTH;
-	}
-
-	public void setDECORATOR_MARGIN_WIDTH(int dECORATOR_MARGIN_WIDTH) {
-		DECORATOR_MARGIN_WIDTH = dECORATOR_MARGIN_WIDTH;
-	}
-
-	public int getDEFAULT_WIDTH_HINT() {
-		return DEFAULT_WIDTH_HINT;
-	}
-
-	public void setDEFAULT_WIDTH_HINT(int dEFAULT_WIDTH_HINT) {
-		DEFAULT_WIDTH_HINT = dEFAULT_WIDTH_HINT;
-	}
 
 	public String getPatternValue() {
 		return patternValue;
@@ -275,8 +282,14 @@ public class Validator {
 		this.button = button;
 	}
 
-	public int getCount() {
-		return count;
+	public static boolean isNoErrorMessage() {
+		return noErrorMessage;
+	}
+
+	public static void setNoErrorMessage(boolean noErrorMessage) {
+		
+		Validator.noErrorMessage = noErrorMessage;
+		
 	}
 
 
